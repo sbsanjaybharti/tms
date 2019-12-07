@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Omnius Frontend Challenge</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Create Task</h1>
+    <form id="form_submit" method="POST" action='#'>
+        <div id="result"></div>
+        <input type="text" name="title" id="title" placeholder="Title"><br/>
+        <textarea type="textarea" name="description" id="description" placeholder="Description" rows="5" cols="50"></textarea><br/>
+        <select name="priority" id="priority">
+            <option value="0">Select priority</option>
+            <option value="100">Low</option>
+            <option value="200">Medium</option>
+            <option value="300">High</option>
+        </select><br/>
+        <input type="text" name="due_date" id="due_date" placeholder="YYY-MM-DD"><br/>
+        <input type="submit" id="save" value="Save">
+    </form>
+
+<script>
+$(document).ready(function () {
+
+    $("#save").click(function (event) {
+
+        //stop submit the form, we will post it manually.
+        event.preventDefault();
+
+        var data = {
+                      "title": $('#title').val(),
+                      "description": $('#description').val(),
+                      "priority": parseInt($('#priority').val()),
+                      "due_date": $('#due_date').val()
+                    };
+         console.log("SUCCESS : ", data);
+
+        $.ajax({
+            type: "POST",
+            dataType: 'json',
+            url: "https://tmapi.docker.localhost/v1/task/",
+            data: JSON.stringify(data),
+            processData: false,
+            contentType: "application/json",
+            cache: false,
+            timeout: 600000,
+            success: function (data) {
+
+                $("#result").text(data);
+                console.log("SUCCESS : ", data);
+                $("#btnSubmit").prop("disabled", false);
+
+            },
+            error: function (e) {
+
+                $("#result").text(e.responseText);
+                console.log("ERROR : ", e);
+                $("#btnSubmit").prop("disabled", false);
+
+            }
+        });
+
+    });
+
+});
+
+</script>
+</body>
+</html>

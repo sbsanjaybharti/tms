@@ -1,0 +1,155 @@
+version: '3'
+services:
+  # ##################
+  # Traefik
+  # ##################
+  traefik:
+    image: traefik
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+      - "8001:8001"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik.toml:/etc/traefik/traefik.toml
+      - ./ssl:/ssl/
+
+  tmapi:
+    build: ./nginx
+    environment:
+      APP_HOST_NAME: 'task-management-api'
+      APP_HOST_PORT: 8001
+    container_name: tmapi_nginx
+    restart: always
+    depends_on:
+      - task-management-api
+    labels:
+      - "traefik.backend=tmapi"
+      - "traefik.frontend.rule=Host:tmapi.docker.localhost"
+      - "traefik.port=9000"
+      - "traefik.enable=true"
+
+  frontend:
+    build: ./nginx
+    environment:
+      APP_HOST_NAME: 'frontend-management'
+      APP_HOST_PORT: 8001
+    container_name: frontend_nginx
+    restart: always
+    depends_on:
+      - frontend-management
+    labels:
+      - "traefik.backend=frontend"
+      - "traefik.frontend.rule=Host:frontend.docker.localhost"
+      - "traefik.port=9001"
+      - "traefik.enable=true"
+
+  # ##################
+  # Task management System Application
+  # ##################
+  task-management-api:
+    build:
+      context: ./task-management-api
+      dockerfile: local.Dockerfile
+    environment:
+      APP_NAME: 'TaskManagementAPI'
+      FLASK_CONFIG: 'development'
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: task_management
+      DB_USER: root
+      DB_PASSWORD: example
+      DOMAIN: 'tmapi.docker.localhost'
+      DEBUG_MODE: 'True'
+    volumes:
+      - ./task-management-api:/app
+    expose:
+      - 8001
+    depends_on:
+      - mysql
+    labels:
+      - "traefik.backend=task-management-api"
+      - "traefik.frontend.rule=Host:task-management-api.docker.localhost"
+      - "traefik.port=8001"
+      - "traefik.enable=true"
+
+  # ##################
+  # Frontend Application
+  # ##################
+  frontend-management:
+    build:
+      context: ./frontend-management
+      dockerfile: local.Dockerfile
+    environment:
+      APP_NAME: 'PaymentsAPI'
+      FLASK_CONFIG: 'development'
+      ALLOWD_HOST: 'frontend-management.localhost'
+      DOMAIN: frontend.docker.localhost
+      DEBUG_MODE: 'True'
+    volumes:
+      - ./frontend-management:/app
+    expose:
+      - 8001
+    depends_on:
+      - mysql
+    labels:
+      - "traefik.backend=frontend-management"
+      - "traefik.frontend.rule=Host:frontend-management.docker.localhost"
+      - "traefik.port=8001"
+      - "traefik.enable=true"
+
+  # ##################
+  # Mysql Database
+  # ##################
+  mysql:
+    image: mysql:5.7
+    volumes:
+      - mysql_database:/var/lib/mysql
+      - ./mysql_dumps:/dumps
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+
+
+  # ##################
+  # phpMyAdmin
+  # ##################
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+    labels:
+      - "traefik.backend=phpmyadmin"
+      - "traefik.frontend.rule=Host:phpmyadmin.docker.localhost"
+      - "traefik.port=80"
+      - "traefik.enable=true"
+    depends_on:
+      - mysql
+
+  # ##################
+  # CRON dumps mysql
+  # ##################
+  mysql_dump:
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: example
+      CRON_TIME: "* * * * *" # every minute
+    volumes:
+      - ./mysql_dumps:/backup
+    depends_on:
+      - mysql
+  redis:
+    image: redis
+    labels:
+      - "traefik.backend=redis"
+      - "traefik.frontend.rule=Host:redis.docker.localhost"
+      - "traefik.port=6379"
+      - "traefik.enable=true"
+
+volumes:
+  mysql_database:

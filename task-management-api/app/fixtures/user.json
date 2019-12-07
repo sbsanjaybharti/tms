@@ -1,0 +1,11 @@
+[
+  {
+    "model": "User",
+    "pk": 1,
+    "fields": {
+      "name": "Admin",
+      "username": "Admin",
+      "email": "admin@admin.com"
+    }
+  }
+]

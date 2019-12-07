@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Omnius Frontend Challenge</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>List Task</h1>
+    <div id="list"></div>
+
+<script>
+$(document).ready(function () {
+
+        var data = {
+                      "page": 1
+                    };
+        $.ajax({
+            type: "GET",
+            dataType: 'json',
+            url: "https://tmapi.docker.localhost/v1/task/",
+            processData: false,
+            contentType: "application/json",
+            cache: false,
+            timeout: 600000,
+            success: function (data) {
+                console.log("processes : ", data.data);
+
+                content = '<table><tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>';
+                $.each( data.data, function( key, value ) {
+                  content += '<tr>';
+                  content += '<td>' + value.title + '</td>';
+                  content += '<td>' + value.status + '</td>';
+                  content += '<td>' + value.priority + '</td>';
+                  content += '<td>' + value.due_date + '</td>';
+                  content += '</tr>';
+                  $(content).appendTo("#list");
+                  content = '';
+                });
+                content = '</table>';
+                $(content).appendTo("#list");
+            },
+            error: function (e) {
+
+                $("#result").text(e.responseText);
+                console.log("ERROR : ", e);
+                $("#btnSubmit").prop("disabled", false);
+
+            }
+        });
+
+});
+
+</script>
+</body>
+</html>
