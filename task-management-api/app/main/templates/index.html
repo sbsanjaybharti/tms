@@ -2,68 +2,196 @@
 <html>
 <head>
     <title>Omnius Frontend Challenge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 </head>
 <body>
     <h1>Create Task</h1>
-    <form id="form_submit" method="POST" action='#'>
-        <div id="result"></div>
-        <input type="text" name="title" id="title" placeholder="Title"><br/>
-        <textarea type="textarea" name="description" id="description" placeholder="Description" rows="5" cols="50"></textarea><br/>
-        <select name="priority" id="priority">
-            <option value="0">Select priority</option>
-            <option value="100">Low</option>
-            <option value="200">Medium</option>
-            <option value="300">High</option>
-        </select><br/>
-        <input type="text" name="due_date" id="due_date" placeholder="YYY-MM-DD"><br/>
-        <input type="submit" id="save" value="Save">
-    </form>
+    <div id="connecting"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
+        <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
+    <div id="task" style="float: left; width: 45%;">
+        <form id="form_submit" method="POST" action='#'>
+            <div id="result"></div>
+            <input type="text" name="title" id="title" placeholder="Title"><br/>
+            <textarea type="textarea" name="description" id="description" placeholder="Description" rows="5" cols="50"></textarea><br/>
+            <select name="priority" id="priority">
+                <option value="0">Select priority</option>
+                <option value="100">Low</option>
+                <option value="200">Medium</option>
+                <option value="300">High</option>
+            </select><br/>
+            <input type="text" name="due_date" id="due_date" placeholder="YYY-MM-DD"><br/>
+            <input type="submit" id="save" value="Save">
+        </form>
+    </div>
+    <div style="float: right; width: 45%;">
+        <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
 
+        <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected...</div>
+        <div id="new_task">
+            <table id="" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
+                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>
+            </table>
+            <table id="display_task" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
+                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>
+            </table>
+        </div>
+    </div>
+<style>
+table {
+    width: 100%;
+}
+table, td, th {
+    border: 1px solid black;
+}
+
+#table1 {
+  border-collapse: separate;
+}
+
+#table2 {
+  border-collapse: collapse;
+}
+</style>
 <script>
-$(document).ready(function () {
+    $(document).ready(function () {
+        $("#result").hide();
+        $("#task").hide();
+        $("#connecting").show();
+        $("#display_connecting").show();
+        $("#display_connected").show();
+        // Use a "/test" namespace.
+        // An application can open a connection on multiple namespaces, and
+        // Socket.IO will multiplex all those connections on a single
+        // physical channel. If you don't care about multiple channels, you
+        // can set the namespace to an empty string.
+        namespace = '/test';
 
-    $("#save").click(function (event) {
+        // Connect to the Socket.IO server.
+        // The connection URL has the following format, relative to the current page:
+        //     http[s]://<domain>:<port>[/<namespace>]
+        var socket = io(namespace);
 
-        //stop submit the form, we will post it manually.
-        event.preventDefault();
+        // Event handler for new connections.
+        // The callback function is invoked when a connection with the
+        // server is established.
+        socket.on('connect', function() {
+            socket.emit('my_event', {data: 'connected'});
+        });
 
-        var data = {
-                      "title": $('#title').val(),
-                      "description": $('#description').val(),
-                      "priority": parseInt($('#priority').val()),
-                      "due_date": $('#due_date').val()
-                    };
-         console.log("SUCCESS : ", data);
+        // Event handler for server sent data.
+        // The callback function is invoked whenever the server emits data
+        // to the client. The data is then displayed in the "Received"
+        // section of the page.
+        socket.on('my_response', function(value, cb) {
 
-        $.ajax({
-            type: "POST",
-            dataType: 'json',
-            url: "https://tmapi.docker.localhost/v1/task/",
-            data: JSON.stringify(data),
-            processData: false,
-            contentType: "application/json",
-            cache: false,
-            timeout: 600000,
-            success: function (data) {
-
-                $("#result").text(data);
-                console.log("SUCCESS : ", data);
-                $("#btnSubmit").prop("disabled", false);
-
-            },
-            error: function (e) {
-
-                $("#result").text(e.responseText);
-                console.log("ERROR : ", e);
-                $("#btnSubmit").prop("disabled", false);
-
+            console.log("data response : ", value);
+            if(value.data == 'connecting') {
+                $("#display_connecting").show();
+                $("#display_connected").hide();
+            }else if(value.data == 'connected'){
+                $("#display_connecting").hide();
+                $("#display_connected").hide();
+            }else {
+                $("#display_connecting").hide();
+                $("#display_connected").hide();
+                console.log("==", value)
+                if(value.status != 200){
+                      content = '<tr>';
+                      content += '<td colspan="4">' + value.data.message + '</td>';
+                      content += '</tr>';
+                      $("#display_task").prepend(content);
+                }else{
+                  content = '<tr>';
+                  content += '<td>' + value.data.title + '</td>';
+                  content += '<td>' + value.data.status + '</td>';
+                  content += '<td>' + value.data.priority + '</td>';
+                  // content += '<td>' + value.data.due_date + '</td>';
+                  content += '</tr>';
+                  $("#display_task").prepend(content);
+                }
             }
+            if (cb)
+                cb();
+        });
+
+        // Interval function that tests message latency by sending a "ping"
+        // message. The server then responds with a "pong" message and the
+        // round trip time is measured.
+        var ping_pong_times = [];
+        var start_time;
+        window.setInterval(function() {
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+        }, 1000);
+
+        // Handler for the "pong" message. When the pong is received, the
+        // time from the ping is stored, and the average of the last 30
+        // samples is average and displayed.
+        socket.on('my_pong', function() {
+            var latency = (new Date).getTime() - start_time;
+            ping_pong_times.push(latency);
+            ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+            var sum = 0;
+            for (var i = 0; i < ping_pong_times.length; i++)
+                sum += ping_pong_times[i];
+            $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+
+            $("#task").show();
+            $("#connecting").hide();
+        });
+
+        $("#save").click(function (event) {
+
+            //stop submit the form, we will post it manually.
+            event.preventDefault();
+
+            var data = {
+                          "title": $('#title').val(),
+                          "description": $('#description').val(),
+                          "priority": parseInt($('#priority').val()),
+                          "due_date": $('#due_date').val()
+                        };
+             console.log("data before : ", data);
+
+            $.ajax({
+                type: "POST",
+                dataType: 'json',
+                url: "https://tmapi.docker.localhost/v1/task/",
+                data: JSON.stringify(data),
+                processData: false,
+                contentType: "application/json",
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    if(data.code == 200) {
+                        socket.emit('my_broadcast_event', {data: data.data.id});
+                        $("#result").text(data.message);
+                        $('#result').fadeIn('slow', function(){
+                           $('#result').delay(5000).fadeOut();
+                        });
+                        $("#result").delay(5000).fadeIn(500);
+                        console.log("data after : ", data);
+                        return false;
+                    }else {
+                        $("#result").text('Something went wrong, Please try again');
+                    }
+
+                },
+                error: function (e) {
+
+                    $("#result").text(e.responseText);
+                    console.log("ERROR : ", e);
+                    $("#btnSubmit").prop("disabled", false);
+
+                }
+            });
+
         });
 
     });
-
-});
 
 </script>
 </body>

@@ -1,10 +1,13 @@
 import os
 import unittest
 import operator
+import eventlet
 from threading import Lock
 
+# from engineio.async_drivers import gevent
 from flask import jsonify
-from flask import Flask, render_template
+from flask import Flask, render_template, session, request, \
+    copy_current_request_context
 from flask_migrate import Migrate, MigrateCommand
 from flask_restplus import Api
 from flask_script import Manager
@@ -14,6 +17,9 @@ from app.main import create_app, db
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
 from app.main.model import task
+from app.main.service.TaskService import TaskService
+import eventlet
+eventlet.monkey_patch()
 async_mode = None
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'development')
@@ -21,7 +27,7 @@ if os.getenv('DEBUG_MODE') == 'False':
     api = Api(app, ui=False, specs=False)
 
 
-socketio = SocketIO(app, async_mode=async_mode)
+socketio = SocketIO(app, logger=True, engineio_logger=True, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
 
@@ -36,6 +42,16 @@ migrate = Migrate(app, db)
 manager.add_command('db', MigrateCommand)
 
 
+def background_thread():
+    """Example of how to send server generated events to clients."""
+    count = 0
+    while True:
+        socketio.sleep(10)
+        count += 1
+        socketio.emit('my_response',
+                      {'data': 'connected', 'count': count},
+                      namespace='/test')
+
 @app.route('/broadcast')
 def broadcast():
     return render_template('broadcast.html', async_mode=socketio.async_mode)
@@ -49,16 +65,68 @@ def list():
     return render_template('list.html', async_mode=socketio.async_mode)
 
 
+@socketio.on('my_event', namespace='/test')
+def test_message(message):
+    print("------------------------------------------My event------------------------------------------" + message['data'])
+    # session['receive_count'] = session.get('receive_count', 0) + 1
+    if (message['data'] != 'connecting') or (message['data'] != 'connected'):
+        task = TaskService.get('00d52869-bc59-4cef-8a36-5480889da042')
+        print("------------------------------------------My task------------------------------------------" + str(task['code']))
+        if task['code'] == 200:
+            emit('my_response',
+                 {'data': task['data'], 'status': task['code']})
+        else:
+            emit('my_response',
+                 {'data': task, 'status': task['code']})
+
+
 @socketio.on('my_broadcast_event', namespace='/test')
 def test_broadcast_message(message):
+    print("------------------------------------------My broadcast------------------------------------------" + message['data'])
+    # session['receive_count'] = session.get('receive_count', 0) + 1
     emit('my_response',
-         {'data': 'you are here', 'count': 1},
+         {'data': message['data'], 'count': 3},
          broadcast=True)
+
+
+@socketio.on('disconnect_request', namespace='/test')
+def disconnect_request():
+    @copy_current_request_context
+    def can_disconnect():
+        disconnect()
+
+    session['receive_count'] = session.get('receive_count', 0) + 1
+    # for this emit we use a callback function
+    # when the callback function is invoked we know that the message has been
+    # received and it is safe to disconnect
+    emit('my_response',
+         {'data': 'Disconnected!', 'count': session['receive_count']},
+         callback=can_disconnect)
+
+
+@socketio.on('my_ping', namespace='/test')
+def ping_pong():
+    emit('my_pong')
+
+
+@socketio.on('connect', namespace='/test')
+def test_connect():
+    global thread
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(background_thread)
+    emit('my_response', {'data': 'connecting', 'count': 0})
+
+
+@socketio.on('disconnect', namespace='/test')
+def test_disconnect():
+    print('Client disconnected', request.sid)
+
 
 @app.teardown_request
 def session_clear(exception=None):
-    db.session.remove()
-    print("remove session")
+    # db.session.remove()
+    # print("remove session")
     if exception and db.session.is_active:
         db.session.rollback()
 
@@ -90,4 +158,5 @@ def routes():
         print(route)
 
 if __name__ == '__main__':
-    manager.run()
+    # manager.run()
+    socketio.run(app, debug=True)
