@@ -1,131 +1,152 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html>
+
 <head>
-    <title>Flask-SocketIO Test</title>
-    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-    <script type="text/javascript" charset="utf-8">
-        $(document).ready(function() {
-            // Use a "/test" namespace.
-            // An application can open a connection on multiple namespaces, and
-            // Socket.IO will multiplex all those connections on a single
-            // physical channel. If you don't care about multiple channels, you
-            // can set the namespace to an empty string.
-            namespace = '/test';
-
-            // Connect to the Socket.IO server.
-            // The connection URL has the following format, relative to the current page:
-            //     http[s]://<domain>:<port>[/<namespace>]
-            var socket = io(namespace);
-
-            // Event handler for new connections.
-            // The callback function is invoked when a connection with the
-            // server is established.
-            socket.on('connect', function() {
-                socket.emit('my_event', {data: 'I\'m connected!'});
-            });
-
-            // Event handler for server sent data.
-            // The callback function is invoked whenever the server emits data
-            // to the client. The data is then displayed in the "Received"
-            // section of the page.
-            socket.on('my_response', function(msg, cb) {
-                $('#log').append('<br>' + $('<div/>').text('Received #' + msg.count + ': ' + msg.data.title).html());
-                if (cb)
-                    cb();
-            });
-
-            // Interval function that tests message latency by sending a "ping"
-            // message. The server then responds with a "pong" message and the
-            // round trip time is measured.
-            var ping_pong_times = [];
-            var start_time;
-            window.setInterval(function() {
-                start_time = (new Date).getTime();
-                socket.emit('my_ping');
-            }, 1000);
-
-            // Handler for the "pong" message. When the pong is received, the
-            // time from the ping is stored, and the average of the last 30
-            // samples is average and displayed.
-            socket.on('my_pong', function() {
-                var latency = (new Date).getTime() - start_time;
-                ping_pong_times.push(latency);
-                ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
-                var sum = 0;
-                for (var i = 0; i < ping_pong_times.length; i++)
-                    sum += ping_pong_times[i];
-                $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
-            });
-
-            // Handlers for the different forms in the page.
-            // These accept data from the user and send it to the server in a
-            // variety of ways
-            $('form#emit').submit(function(event) {
-                socket.emit('my_event', {data: $('#emit_data').val()});
-                return false;
-            });
-            $('form#broadcast').submit(function(event) {
-                socket.emit('my_broadcast_event', {data: $('#broadcast_data').val()});
-                return false;
-            });
-            $('form#join').submit(function(event) {
-                socket.emit('join', {room: $('#join_room').val()});
-                return false;
-            });
-            $('form#leave').submit(function(event) {
-                socket.emit('leave', {room: $('#leave_room').val()});
-                return false;
-            });
-            $('form#send_room').submit(function(event) {
-                socket.emit('my_room_event', {room: $('#room_name').val(), data: $('#room_data').val()});
-                return false;
-            });
-            $('form#close').submit(function(event) {
-                socket.emit('close_room', {room: $('#close_room').val()});
-                return false;
-            });
-            $('form#disconnect').submit(function(event) {
-                socket.emit('disconnect_request');
-                return false;
-            });
-        });
-    </script>
+  <title>login page</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <style>
+  </style>
 </head>
+
 <body>
-    <h1>Flask-SocketIO Test</h1>
-    <p>Async mode is: <b>{{ async_mode }}</b></p>
-    <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
-    <h2>Send:</h2>
-    <form id="emit" method="POST" action='#'>
-        <input type="text" name="emit_data" id="emit_data" placeholder="Message">
-        <input type="submit" value="Echo">
+  <div id="loginUI">
+    <form id="loginForm" novalidate>
+
+      <div class="field">
+        <input id="email" type="email" name="email" placeholder="Email" required />
+      </div>
+      <div class="field">
+        <input id="password" type="password" name="password" placeholder="Password" required />
+      </div>
+      <p class="form_error loginError"></p>
+      <div class="login_submit">
+
+        <button id="loginButton" class="btn btn-primary btn-md" type="submit" tabindex="4">Log In</button>
+        <br />
+        <div class="alert alert-danger" role="alert">
+          <p id="passEr" class="form_error"></p>
+          <p id="emailEr" class="form_error"></p>
+        </div>
+      </div>
+
     </form>
-    <form id="broadcast" method="POST" action='#'>
-        <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Message">
-        <input type="submit" value="Broadcast">
-    </form>
-    <form id="join" method="POST" action='#'>
-        <input type="text" name="join_room" id="join_room" placeholder="Room Name">
-        <input type="submit" value="Join Room">
-    </form>
-    <form id="leave" method="POST" action='#'>
-        <input type="text" name="leave_room" id="leave_room" placeholder="Room Name">
-        <input type="submit" value="Leave Room">
-    </form>
-    <form id="send_room" method="POST" action='#'>
-        <input type="text" name="room_name" id="room_name" placeholder="Room Name">
-        <input type="text" name="room_data" id="room_data" placeholder="Message">
-        <input type="submit" value="Send to Room">
-    </form>
-    <form id="close" method="POST" action="#">
-        <input type="text" name="close_room" id="close_room" placeholder="Room Name">
-        <input type="submit" value="Close Room">
-    </form>
-    <form id="disconnect" method="POST" action="#">
-        <input type="submit" value="Disconnect">
-    </form>
-    <h2>Receive:</h2>
-    <div id="log"></div>
+  </div>
+  <script>
+    $("#loginButton").on("click", function (e) {
+
+      e.preventDefault();
+
+      const loginUI     = $("#loginUI");
+      const mailVal     = loginUI.find("#email").val();
+      const passVal     = loginUI.find("#password").val();
+      const mailEr      = $('#emailEr');
+      const passEr      = $('#passEr');
+      const passErTxt   = 'Password cannot be blank';
+      const mailErTxt   = 'Email cannot be blank';
+      const mailErValidTxt = 'Please include a valid email address.';
+      const regexEmail  = /\w+([-+.']\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*/;
+      const loginErA    = $(".login_phase_one");
+      const loginErB    = $(".login_phase_two");
+
+      $(".form_error").css("display", "none");
+
+      const loginInfo = {
+        email: $.trim(mailVal),
+        password: $.trim(passVal),
+      };
+
+      if ((loginInfo.email === '') && (loginInfo.password === '')) {
+        passEr.text(passErTxt).show();
+        mailEr.text(mailErTxt).show();
+      } else if (loginInfo.password === '') {
+        passEr.text(passErTxt).show();
+      } else if (loginInfo.email === '') {
+        mailEr.text(mailErTxt).show();
+      } else if (regexEmail.test(loginInfo.email)) {
+        mailEr.hide();
+        passEr.hide();
+        loginErA.hide();
+        loginErB.fadeIn("slow");
+      } else {
+        mailEr.text(mailErValidTxt).show();
+      }
+
+      // const data = JSON.stringify(loginInfo);
+
+      // makeLoginReq('/v1/auth/login','POST', data, setToken);
+
+      var data = {
+                    "email": $('#email').val(),
+                    "password": $('#password').val()
+                  };
+
+      // makeLoginReq('/v1/auth/login','POST', JSON.stringify(data), setToken);
+
+      $.ajax({
+          type: "POST",
+          dataType: 'json',
+          url: "/v1/auth/login",
+          data: JSON.stringify(data),
+          processData: false,
+          contentType: "application/json",
+          cache: false,
+          timeout: 600000,
+          success: function (data) {
+
+            if(data.code == 200) {
+               // alert(data.Authorization);
+              window.sessionStorage.setItem('token', data.Authorization);
+              window.location.replace("broadcast/new");
+              return false;
+            }else {
+                $("#result").text('Something went wrong, Please try again');
+            }
+
+          },
+          error: function (e) {
+
+              console.log("ERROR : ", e);
+
+          }
+      });
+    });
+
+    function makeLoginReq( URL, Method, body, callback) {
+      $.ajax({
+        type: Method,
+        url: URL,
+        dataType: "json",
+        data: body,
+        processData: false,
+        contentType: "application/json",
+        cache: false,
+        timeout: 600000,
+      }).success(function (data) {
+             console.log("data before : ", data);
+             alert('kk');
+          callback('token', data.Authorization);
+          window.location.replace("broadcast/new");
+      }).fail(function (xhr) {
+             console.log("data before : ", data);
+        // document.getElementById("loginButton").disabled = false;
+        // $("#loginButton").html("Log In");
+        // $(".alert").css("display", "block");
+        callback(data);
+      })
+    };
+
+    function setToken(key, value) {
+      alert('j');
+      window.sessionStorage.setItem(key, value);
+      alert('lk');
+      consol.log('set token callback')
+    }
+
+    function getToken() {
+      return window.sessionStorage.getItem(key, value);
+    }
+  </script>
 </body>
+
+
 </html>

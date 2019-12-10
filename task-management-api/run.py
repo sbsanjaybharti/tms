@@ -16,7 +16,8 @@ from app import blueprint
 from app.main import create_app, db
 from flask_socketio import SocketIO, emit, join_room, leave_room, \
     close_room, rooms, disconnect
-from app.main.model import task
+from app.main.model import task, user
+from app.main.model import blacklist
 from app.main.service.TaskService import TaskService
 import eventlet
 eventlet.monkey_patch()

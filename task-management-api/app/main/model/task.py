@@ -23,7 +23,7 @@ class Task(db.Model):
     # id = db.Column(db.Integer(), primary_key=True)
     id = db.Column(db.String(100), primary_key=True, autoincrement=False, unique=True, default=str(uuid.uuid4()))
     title = db.Column(db.String(100), index=True)
-    description = db.Column(db.Text(), index=True)
+    description = db.Column(db.String(500), index=True)
     priority = db.Column(db.Integer())  # 100 Low, 200 Medium, 300 High
     status = db.Column(db.Integer())  # 100 created, 200 pending, 300 started, 400 completed, 500 close
 

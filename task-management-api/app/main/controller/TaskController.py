@@ -5,6 +5,7 @@ import requests
 from flask import request, session, jsonify, Flask
 from flask_cors import cross_origin
 from flask_restplus import Resource
+from ..decorator.AuthDecorator import token_required
 from ..utility.ErrorHandler import responseData
 from ..utility.validation import Validation
 from ..service.TaskService import TaskService
@@ -27,6 +28,7 @@ class TaskController(Resource):
     """
     @cross_origin(headers=['Content-Type', 'Authorization'])
     @api.expect(task_create, validate=True)
+    @token_required
     def post(self):
 
         """
@@ -50,6 +52,7 @@ class TaskController(Resource):
     # @api.doc(params={'page': 'Pagination no. of page'})
     @api.doc(params={'page': 'Pagination no. of page'})
     # @api.marshal_list_with(task_list, envelope='data')
+    @token_required
     def get(self):
         """
          API to list task
@@ -66,6 +69,7 @@ class TaskController(Resource):
 @api.doc(parser=parser)
 class TaskViewController(Resource):
     @cross_origin(headers=['Content-Type', 'Authorization'])
+    @token_required
     def get(self, id):
         """
          API to get the task
@@ -78,6 +82,7 @@ class TaskViewController(Resource):
     # return user data with auth0 id
     @cross_origin(headers=['Content-Type', 'Authorization'])
     @api.expect(task_update, validate=True)
+    @token_required
     def put(self, id):
         """
          API to update the task

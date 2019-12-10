@@ -2,7 +2,7 @@ import linecache
 import sys
 
 from flask import jsonify, Flask
-from flask import Flask, request, jsonify, current_app
+from flask import Flask, request, jsonify, make_response
 
 # from app.main import create_app
 
@@ -47,7 +47,7 @@ def responseData(data):
             return jsonify(response_object), 444
         else:
             response = data
-            return jsonify(response), response['code']
+            return make_response(jsonify(response), response['code'])
 
     except Exception as e:
         response_object = {

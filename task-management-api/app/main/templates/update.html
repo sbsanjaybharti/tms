@@ -6,11 +6,24 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+
+<script>
+$(document).ready(function () {
+    if ((sessionStorage.getItem("token") == '') || (sessionStorage.getItem("token") == null))
+        window.location.replace("/broadcast");
+
+    $("#logout").click(function (event) {
+        sessionStorage.removeItem("token");
+        window.location.replace("/broadcast");
+    });
+});
+</script>
 </head>
 <body>
     <ul>
         <li><a href="/broadcast/new">Add new</a></li>
         <li><a href="/broadcast/list">List</a></li>
+        <li><a id="logout" href="#" onClick = "openSolution();">Logout</a></li>
     </ul>
     <h1>Update Task</h1>
     <div id="task" style="float: left; width: 45%;">
@@ -50,6 +63,7 @@
 <!--            </table>-->
 <!--        </div>-->
 <!--    </div>-->
+
 <style>
 ul {
   list-style-type: none;
@@ -71,10 +85,12 @@ li a {
   text-decoration: none;
 }
 
-li a:hover {
-  background-color: #111111;
+li a.active {
+  background-color: #f44336;
 }
-
+li a:hover {
+  background-color: #333333;
+}
 a:link, a:visited {
   background-color: #f44336;
   color: white;
@@ -83,25 +99,44 @@ a:link, a:visited {
   text-decoration: none;
   display: inline-block;
 }
-
+table a{
+  padding: 10px 25px !important;
+}
 a:hover, a:active {
-  background-color: red;
+  background-color: #333333;
 }
 
 table {
-    width: 100%;
-}
-table, td, th {
-    border: 1px solid black;
-}
-
-#table1 {
-  border-collapse: separate;
-}
-
-#table2 {
   border-collapse: collapse;
+  width: 100%;
 }
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+  background-color: #333333;
+  color: white;
+}
+
+/*table {*/
+/*    width: 80%;*/
+/*}*/
+/*table, td, th {*/
+/*    border: 1px solid black;*/
+/*}*/
+
+/*#table1 {*/
+/*  border-collapse: separate;*/
+/*}*/
+
+/*#table2 {*/
+/*  border-collapse: collapse;*/
+/*}*/
 </style>
 <script>
     $(document).ready(function () {
@@ -114,6 +149,9 @@ table, td, th {
             contentType: "application/json",
             cache: false,
             timeout: 600000,
+            headers: {
+                "Authorization": sessionStorage.getItem("token")
+            },
             success: function (data) {
 
                 console.log("Get data : ", data);
@@ -165,6 +203,9 @@ table, td, th {
                 contentType: "application/json",
                 cache: false,
                 timeout: 600000,
+                headers: {
+                    "Authorization": sessionStorage.getItem("token")
+                },
                 success: function (data) {
                     if(data.code == 200) {
                         $("#result").text(data.message);

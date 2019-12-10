@@ -6,11 +6,24 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+
+<script>
+$(document).ready(function () {
+    if ((sessionStorage.getItem("token") == '') || (sessionStorage.getItem("token") == null))
+        window.location.replace("/broadcast");
+
+    $("#logout").click(function (event) {
+        sessionStorage.removeItem("token");
+        window.location.replace("/broadcast");
+    });
+});
+</script>
 </head>
 <body>
     <ul>
         <li><a href="new">Add new</a></li>
         <li><a class="active" href="list">List</a></li>
+        <li><a id="logout" href="#" onClick = "openSolution();">Logout</a></li>
     </ul>
     <h1>List Task</h1>
 
@@ -113,6 +126,9 @@ $(document).ready(function () {
             contentType: "application/json",
             cache: false,
             timeout: 600000,
+            headers: {
+                "Authorization": sessionStorage.getItem("token")
+            },
             success: function (data) {
                 console.log("processes : ", data.data);
 
