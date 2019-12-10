@@ -1,0 +1,197 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Omnius Frontend Challenge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <ul>
+        <li><a href="/broadcast/new">Add new</a></li>
+        <li><a href="/broadcast/list">List</a></li>
+    </ul>
+    <h1>Update Task</h1>
+    <div id="task" style="float: left; width: 45%;">
+        <form id="form_submit" method="POST" action='#'>
+            <div id="result"></div>
+            <input type="text" name="title" id="title" placeholder="Title"><br/>
+            <textarea type="textarea" name="description" id="description" placeholder="Description" rows="5" cols="50"></textarea><br/>
+            <select name="priority" id="priority">
+                <option value="0">Select priority</option>
+                <option value="100">Low</option>
+                <option value="200">Medium</option>
+                <option value="300">High</option>
+            </select><br/>
+            <select name="status" id="status">
+                <option value="0">Select status</option>
+                <option value="100">Created</option>
+                <option value="200">Pending</option>
+                <option value="300">Started</option>
+                <option value="400">Completed</option>
+                <option value="500">Close</option>
+            </select><br/>
+            <input type="text" name="due_date" id="due_date" placeholder="Due date(YYY-MM-DD)"><br/>
+            <input type="text" name="resolved_at" id="resolved_at" placeholder="Resolved date(YYY-MM-DD)"><br/>
+            <input type="submit" id="save" value="Save">
+        </form>
+    </div>
+<!--    <div style="float: right; width: 45%;">-->
+<!--        <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>-->
+
+<!--        <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected</div>-->
+<!--        <div id="new_task">-->
+<!--            <table id="" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">-->
+<!--                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>-->
+<!--            </table>-->
+<!--            <table id="display_task" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">-->
+<!--                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--    </div>-->
+<style>
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+li a:hover {
+  background-color: #111111;
+}
+
+a:link, a:visited {
+  background-color: #f44336;
+  color: white;
+  padding: 14px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a:hover, a:active {
+  background-color: red;
+}
+
+table {
+    width: 100%;
+}
+table, td, th {
+    border: 1px solid black;
+}
+
+#table1 {
+  border-collapse: separate;
+}
+
+#table2 {
+  border-collapse: collapse;
+}
+</style>
+<script>
+    $(document).ready(function () {
+
+        $.ajax({
+            type: "GET",
+            dataType: 'json',
+            url: "/v1/task/{{id}}",
+            processData: false,
+            contentType: "application/json",
+            cache: false,
+            timeout: 600000,
+            success: function (data) {
+
+                console.log("Get data : ", data);
+                if(data.code == 200) {
+                    $("#title").val(data.data.title)
+                    $("#description").val(data.data.description)
+                    $("#due_date").val(data.data.due_date)
+                    $("#resolved_at").val(data.data.resolved_at)
+                    // $("#priority").text(data.data.priority)
+                    $("#status option:contains(" + data.data.status + ")").attr('selected', 'selected')
+                    $("#priority option:contains(" + data.data.priority + ")").attr('selected', 'selected')
+
+                    return false;
+                }else {
+                    $("#result").text('Something went wrong, Please try again');
+                }
+
+            },
+            error: function (e) {
+
+                $("#result").text(e.responseText);
+                console.log("ERROR : ", e);
+                $("#btnSubmit").prop("disabled", false);
+
+            }
+        });
+
+        $("#save").click(function (event) {
+
+            //stop submit the form, we will post it manually.
+            event.preventDefault();
+
+            var data = {
+                          "title": $('#title').val(),
+                          "description": $('#description').val(),
+                          "priority": parseInt($('#priority').val()),
+                          "due_date": $('#due_date').val(),
+                          "resolved_at": $('#resolved_at').val(),
+                          "status": parseInt($('#status').val())
+                        };
+             console.log("data before : ", data);
+
+            $.ajax({
+                type: "PUT",
+                dataType: 'json',
+                url: "/v1/task/{{id}}",
+                data: JSON.stringify(data),
+                processData: false,
+                contentType: "application/json",
+                cache: false,
+                timeout: 600000,
+                success: function (data) {
+                    if(data.code == 200) {
+                        $("#result").text(data.message);
+                        $('#result').fadeIn('slow', function(){
+                           $('#result').delay(5000).fadeOut();
+                        });
+                        $("#result").delay(5000).fadeIn(500);
+                        console.log("data after : ", data);
+                        return false;
+                    }else {
+                        $("#result").text('Something went wrong, Please try again');
+                    }
+
+                },
+                error: function (e) {
+
+                    $("#result").text(e.responseText);
+                    console.log("ERROR : ", e);
+                    $("#btnSubmit").prop("disabled", false);
+
+                }
+            });
+
+        });
+
+    });
+
+</script>
+</body>
+</html>

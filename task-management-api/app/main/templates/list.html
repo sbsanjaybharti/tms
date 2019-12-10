@@ -2,12 +2,103 @@
 <html>
 <head>
     <title>Omnius Frontend Challenge</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 </head>
 <body>
+    <ul>
+        <li><a href="new">Add new</a></li>
+        <li><a class="active" href="list">List</a></li>
+    </ul>
     <h1>List Task</h1>
+
+        <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
+
+        <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected</div>
+    <table id="" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
+        <tr><th width="20%">Title</th><th width="15%">Status</th><th width="15%">Priority</th><th width="20%">Due Date</th><th width="30%">Action</th></tr>
+    </table>
+    <table id="display_task" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
+
+    </table>
     <div id="list"></div>
 
+<style>
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+li a.active {
+  background-color: #f44336;
+}
+li a:hover {
+  background-color: #333333;
+}
+a:link, a:visited {
+  background-color: #f44336;
+  color: white;
+  padding: 14px 25px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+}
+table a{
+  padding: 10px 25px !important;
+}
+a:hover, a:active {
+  background-color: #333333;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even){background-color: #f2f2f2}
+
+th {
+  background-color: #333333;
+  color: white;
+}
+
+/*table {*/
+/*    width: 80%;*/
+/*}*/
+/*table, td, th {*/
+/*    border: 1px solid black;*/
+/*}*/
+
+/*#table1 {*/
+/*  border-collapse: separate;*/
+/*}*/
+
+/*#table2 {*/
+/*  border-collapse: collapse;*/
+/*}*/
+</style>
 <script>
 $(document).ready(function () {
 
@@ -25,19 +116,19 @@ $(document).ready(function () {
             success: function (data) {
                 console.log("processes : ", data.data);
 
-                content = '<table><tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>';
+                content = '';
                 $.each( data.data, function( key, value ) {
                   content += '<tr>';
-                  content += '<td>' + value.title + '</td>';
-                  content += '<td>' + value.status + '</td>';
-                  content += '<td>' + value.priority + '</td>';
-                  content += '<td>' + value.due_date + '</td>';
+                  content += '<td width="20%">' + value.title + '</td>';
+                  content += '<td width="15%">' + value.status + '</td>';
+                  content += '<td width="15%">' + value.priority + '</td>';
+                  content += '<td width="20%">' + value.due_date + '</td>';
+                  content += '<td width="30%"><a href="update/' + value.id + '">Update</a>&nbsp;<a href="update/' + value.id + '">Remind me</a></td>';
                   content += '</tr>';
-                  $(content).appendTo("#list");
+                  $(content).appendTo("#display_task");
                   content = '';
                 });
-                content = '</table>';
-                $(content).appendTo("#list");
+                $(content).appendTo("#display_task");
             },
             error: function (e) {
 
@@ -49,6 +140,100 @@ $(document).ready(function () {
         });
 
 });
+
+</script>
+
+<script>
+    $(document).ready(function () {
+        $("#result").hide();
+        $("#task").hide();
+        $("#connecting").show();
+        $("#display_connecting").show();
+        $("#display_connected").show();
+        // Use a "/test" namespace.
+        // An application can open a connection on multiple namespaces, and
+        // Socket.IO will multiplex all those connections on a single
+        // physical channel. If you don't care about multiple channels, you
+        // can set the namespace to an empty string.
+        namespace = '/test';
+
+        // Connect to the Socket.IO server.
+        // The connection URL has the following format, relative to the current page:
+        //     http[s]://<domain>:<port>[/<namespace>]
+        var socket = io(namespace);
+
+        // Event handler for new connections.
+        // The callback function is invoked when a connection with the
+        // server is established.
+        socket.on('connect', function() {
+            $("#display_connecting").show();
+        });
+
+        // Event handler for server sent data.
+        // The callback function is invoked whenever the server emits data
+        // to the client. The data is then displayed in the "Received"
+        // section of the page.
+        socket.on('my_response', function(value, cb) {
+
+            console.log("data response : ", value);
+            if(value.status == 'connecting') {
+                $("#display_connecting").show();
+                $("#display_connected").hide();
+            }else if(value.status == 'connected'){
+                $("#display_connecting").hide();
+                $("#display_connected").show();
+            }else {
+                $("#display_connecting").hide();
+                $("#display_connected").hide();
+                console.log("==", value)
+                if (value.status != 200) {
+                    content = '<tr>';
+                    content += '<td colspan="4">' + value.data.message + '</td>';
+                    content += '</tr>';
+                    $("#display_task").prepend(content);
+                } else {
+                    content = '<tr>';
+                    content += '<td width="20%">' + value.data.title + '</td>';
+                    content += '<td width="20%">' + value.data.status + '</td>';
+                    content += '<td width="20%">' + value.data.priority + '</td>';
+                    content += '<td width="20%">' + value.data.due_date + '</td>';
+                    content += '<td width="20%"><a href="update/' + value.data.id + '">Update</a><a href="update/' + value.data.id + '">Remind me</a></td>';
+                    content += '</tr>';
+                    $("#display_task").prepend(content);
+                }
+            }
+
+            if (cb)
+                cb();
+        });
+
+        // Interval function that tests message latency by sending a "ping"
+        // message. The server then responds with a "pong" message and the
+        // round trip time is measured.
+        var ping_pong_times = [];
+        var start_time;
+        window.setInterval(function() {
+            start_time = (new Date).getTime();
+            socket.emit('my_ping');
+        }, 1000);
+
+        // Handler for the "pong" message. When the pong is received, the
+        // time from the ping is stored, and the average of the last 30
+        // samples is average and displayed.
+        socket.on('my_pong', function() {
+            var latency = (new Date).getTime() - start_time;
+            ping_pong_times.push(latency);
+            ping_pong_times = ping_pong_times.slice(-30); // keep last 30 samples
+            var sum = 0;
+            for (var i = 0; i < ping_pong_times.length; i++)
+                sum += ping_pong_times[i];
+            $('#ping-pong').text(Math.round(10 * sum / ping_pong_times.length) / 10);
+
+            $("#task").show();
+            $("#connecting").hide();
+        });
+
+    });
 
 </script>
 </body>

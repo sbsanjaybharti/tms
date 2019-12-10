@@ -70,7 +70,7 @@ class TaskService:
                         'id': task.id,
                         'title': task.title,
                         'priority': task.getPriority(),
-                        'due_date': task.due_date,
+                        'due_date': task.getDueDate(),
                         'status': task.getStatus()
                     } for task in task_list.items]
 
@@ -140,10 +140,10 @@ class TaskService:
                         'description': task_obj.description,
                         'priority': task_obj.getPriority(),
                         'status': task_obj.getStatus(),
-                        'due_date': task_obj.due_date,
-                        'resolved_at': task_obj.resolved_at,
-                        'created_at': task_obj.created_at,
-                        'updated_at': task_obj.updated_at
+                        'due_date': task_obj.getDueDate(),
+                        'resolved_at': task_obj.getResolvedAt(),
+                        'created_at': task_obj.getCreatedAt(),
+                        'updated_at': task_obj.getUpdatedAt()
                     }
                 }
                 return response_object

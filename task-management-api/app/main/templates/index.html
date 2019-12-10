@@ -8,6 +8,10 @@
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 </head>
 <body>
+    <ul>
+        <li><a href="new">Add new</a></li>
+        <li><a href="list">List</a></li>
+    </ul>
     <h1>Create Task</h1>
     <div id="connecting"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
         <p>Average ping/pong latency: <b><span id="ping-pong"></span>ms</b></p>
@@ -26,20 +30,43 @@
             <input type="submit" id="save" value="Save">
         </form>
     </div>
-    <div style="float: right; width: 45%;">
-        <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
+<!--    <div style="float: right; width: 45%;">-->
+<!--        <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>-->
 
-        <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected...</div>
-        <div id="new_task">
-            <table id="" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
-                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>
-            </table>
-            <table id="display_task" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">
-                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>
-            </table>
-        </div>
-    </div>
+<!--        <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected</div>-->
+<!--        <div id="new_task">-->
+<!--            <table id="" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">-->
+<!--                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>-->
+<!--            </table>-->
+<!--            <table id="display_task" border="0" cellpadding="4" cellspacing="0" style="border-collapse: collapse;">-->
+<!--                <tr><td>Title</td><td>Status</td><td>Priority</td><td>Due Date</td></tr>-->
+<!--            </table>-->
+<!--        </div>-->
+<!--    </div>-->
 <style>
+ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #333333;
+}
+
+li {
+  float: left;
+}
+
+li a {
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 16px;
+  text-decoration: none;
+}
+
+li a:hover {
+  background-color: #111111;
+}
 table {
     width: 100%;
 }
@@ -78,44 +105,46 @@ table, td, th {
         // The callback function is invoked when a connection with the
         // server is established.
         socket.on('connect', function() {
-            socket.emit('my_event', {data: 'connected'});
+            $("#display_connecting").show();
         });
 
         // Event handler for server sent data.
         // The callback function is invoked whenever the server emits data
         // to the client. The data is then displayed in the "Received"
         // section of the page.
-        socket.on('my_response', function(value, cb) {
-
-            console.log("data response : ", value);
-            if(value.data == 'connecting') {
-                $("#display_connecting").show();
-                $("#display_connected").hide();
-            }else if(value.data == 'connected'){
-                $("#display_connecting").hide();
-                $("#display_connected").hide();
-            }else {
-                $("#display_connecting").hide();
-                $("#display_connected").hide();
-                console.log("==", value)
-                if(value.status != 200){
-                      content = '<tr>';
-                      content += '<td colspan="4">' + value.data.message + '</td>';
-                      content += '</tr>';
-                      $("#display_task").prepend(content);
-                }else{
-                  content = '<tr>';
-                  content += '<td>' + value.data.title + '</td>';
-                  content += '<td>' + value.data.status + '</td>';
-                  content += '<td>' + value.data.priority + '</td>';
-                  // content += '<td>' + value.data.due_date + '</td>';
-                  content += '</tr>';
-                  $("#display_task").prepend(content);
-                }
-            }
-            if (cb)
-                cb();
-        });
+        // socket.on('my_response', function(value, cb) {
+        //
+        //     console.log("data response : ", value);
+        //     if(value.status == 'connecting') {
+        //         $("#display_connecting").show();
+        //         $("#display_connected").hide();
+        //     }else if(value.status == 'connected'){
+        //         $("#display_connecting").hide();
+        //         $("#display_connected").show();
+        //     }else {
+        //         $("#display_connecting").hide();
+        //         $("#display_connected").hide();
+        //         console.log("==", value)
+        //         if (value.status != 200) {
+        //             content = '<tr>';
+        //             content += '<td colspan="3">' + value.data.message + '</td>';
+        //             content += '<td colspan="3">' + value.coming + '</td>';
+        //             content += '</tr>';
+        //             $("#display_task").prepend(content);
+        //         } else {
+        //             content = '<tr>';
+        //             content += '<td>' + value.data.title + '</td>';
+        //             content += '<td>' + value.data.status + '</td>';
+        //             content += '<td>' + value.data.priority + '</td>';
+        //             content += '<td>' + value.coming + '</td>';
+        //             content += '</tr>';
+        //             $("#display_task").prepend(content);
+        //         }
+        //     }
+        //
+        //     if (cb)
+        //         cb();
+        // });
 
         // Interval function that tests message latency by sending a "ping"
         // message. The server then responds with a "pong" message and the
@@ -159,7 +188,7 @@ table, td, th {
             $.ajax({
                 type: "POST",
                 dataType: 'json',
-                url: "https://tmapi.docker.localhost/v1/task/",
+                url: "/v1/task/",
                 data: JSON.stringify(data),
                 processData: false,
                 contentType: "application/json",

@@ -40,5 +40,21 @@ class Task(db.Model):
         return self.priority_disc[self.priority]
 
     def getStatus(self):
-        return self.priority_disc[self.status]
+        return self.status_disc[self.status]
+
+    def getDueDate(self):
+        if self.due_date != None:
+            return self.due_date.strftime('%Y-%m-%d')
+
+    def getResolvedAt(self):
+        if self.resolved_at != None:
+            return self.resolved_at.strftime('%Y-%m-%d')
+
+    def getCreatedAt(self):
+        if self.created_at != None:
+            return self.created_at.strftime('%Y-%m-%d')
+
+    def getUpdatedAt(self):
+        if self.updated_at != None:
+            return self.updated_at.strftime('%Y-%m-%d')
 

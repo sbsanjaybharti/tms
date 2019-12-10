@@ -49,7 +49,7 @@ def background_thread():
         socketio.sleep(10)
         count += 1
         socketio.emit('my_response',
-                      {'data': 'connected', 'count': count},
+                      {'data': 'connected', 'status': 'connected'},
                       namespace='/test')
 
 @app.route('/broadcast')
@@ -60,33 +60,43 @@ def broadcast():
 def index():
     return render_template('index.html', async_mode=socketio.async_mode)
 
+@app.route('/broadcast/update/<id>')
+def update(id):
+    return render_template('update.html', async_mode=socketio.async_mode, id=id)
+
 @app.route('/broadcast/list')
 def list():
     return render_template('list.html', async_mode=socketio.async_mode)
 
-
-@socketio.on('my_event', namespace='/test')
-def test_message(message):
-    print("------------------------------------------My event------------------------------------------" + message['data'])
-    # session['receive_count'] = session.get('receive_count', 0) + 1
-    if (message['data'] != 'connecting') or (message['data'] != 'connected'):
-        task = TaskService.get('00d52869-bc59-4cef-8a36-5480889da042')
-        print("------------------------------------------My task------------------------------------------" + str(task['code']))
-        if task['code'] == 200:
-            emit('my_response',
-                 {'data': task['data'], 'status': task['code']})
-        else:
-            emit('my_response',
-                 {'data': task, 'status': task['code']})
-
+#
+# @socketio.on('my_event', namespace='/test')
+# def test_message(message):
+#     print("------------------------------------------My event------------------------------------------" + message['data'])
+#     # session['receive_count'] = session.get('receive_count', 0) + 1
+#     if message['data'] != 'connected':
+#         task = TaskService.get(message['data'])
+#         print("------------------------------------------My task------------------------------------------" + str(task['code']))
+#         if task['code'] == 200:
+#             emit('my_response',
+#                  {'data': task['data'], 'coming': 'event-sucess', 'status': task['code']})
+#         else:
+#             emit('my_response',
+#                  {'data': task, 'coming': 'event-failed', 'status': task['code']})
+#
 
 @socketio.on('my_broadcast_event', namespace='/test')
 def test_broadcast_message(message):
     print("------------------------------------------My broadcast------------------------------------------" + message['data'])
     # session['receive_count'] = session.get('receive_count', 0) + 1
-    emit('my_response',
-         {'data': message['data'], 'count': 3},
-         broadcast=True)
+    task = TaskService.get(message['data'])
+    if task['code'] == 200:
+        emit('my_response',
+             {'data': task['data'], 'status': task['code']},
+             broadcast=True)
+    else:
+        emit('my_response',
+             {'data': task, 'status': task['code']},
+             broadcast=True)
 
 
 @socketio.on('disconnect_request', namespace='/test')
@@ -115,7 +125,7 @@ def test_connect():
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread)
-    emit('my_response', {'data': 'connecting', 'count': 0})
+    emit('my_response', {'data': 'connecting', 'status': 'connecting', 'count': 0})
 
 
 @socketio.on('disconnect', namespace='/test')

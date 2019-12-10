@@ -30,7 +30,7 @@ class TaskController(Resource):
     def post(self):
 
         """
-         API to create task [ version 0,0,1 ]
+         API to create task
          ## Implementation Notes
          __Access__ : Admin
         """
@@ -52,7 +52,7 @@ class TaskController(Resource):
     # @api.marshal_list_with(task_list, envelope='data')
     def get(self):
         """
-         API to list task [ version 0,0,1 ]
+         API to list task
          ## Implementation Notes
          __Access__ : Admin
         """
@@ -68,7 +68,7 @@ class TaskViewController(Resource):
     @cross_origin(headers=['Content-Type', 'Authorization'])
     def get(self, id):
         """
-         API to get the user
+         API to get the task
          ## Implementation Notes
          __Access__ : Admin
         """
@@ -80,7 +80,7 @@ class TaskViewController(Resource):
     @api.expect(task_update, validate=True)
     def put(self, id):
         """
-         API to update the user details [ version 1,8,0 ]
+         API to update the task
          ## Implementation Notes
          __Access__ : Admin
         """
@@ -91,16 +91,16 @@ class TaskViewController(Resource):
             return responseData(validation)
 
         return responseData(TaskService.edit(patch_data, id))
-
-@api.route('/<id>')
-@api.header('Authorization: bearer', 'JWT TOKEN', required=True)
-@api.doc(parser=parser)
-class TaskReminderController(Resource):
-    @cross_origin(headers=['Content-Type', 'Authorization'])
-    def get(self, id):
-        """
-         API to get the user
-         ## Implementation Notes
-         __Access__ : Admin
-        """
-        return responseData(TaskService.reminder(id))
+#
+# @api.route('/<id>')
+# @api.header('Authorization: bearer', 'JWT TOKEN', required=True)
+# @api.doc(parser=parser)
+# class TaskReminderController(Resource):
+#     @cross_origin(headers=['Content-Type', 'Authorization'])
+#     def get(self, id):
+#         """
+#          API to get the user
+#          ## Implementation Notes
+#          __Access__ : Admin
+#         """
+#         return responseData(TaskService.reminder(id))
