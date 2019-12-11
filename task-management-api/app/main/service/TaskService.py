@@ -7,7 +7,7 @@ from ..model.task import Task
 from ..utility.ErrorHandler import getException
 from sqlalchemy import asc, desc, and_
 from flask import Flask, request, jsonify, current_app
-from ..utility.celery import processTheTask
+from ..utility.celery import processTheTask, taskCreate, taskUpdate
 
 import datetime
 
@@ -22,26 +22,25 @@ class TaskService:
             else:
                 priority = data.get('priority')
 
-            new_task = Task(
-                    id=str(uuid.uuid4()),
-                    title=data.get('title'),
-                    description=data.get('description'),
-                    priority=priority,
-                    status=100,
-                    due_date=data.get('due_date'),
-            )
-            new_task.save()
+            # ********************************************
+            # Celery call for create task
+            # ********************************************
+            id = str(uuid.uuid4())
+            taskCreate.delay(data, id)
+            # ********************************************
+            # Celery call for create task
+            # ********************************************
 
             response_object = {
                 'code': 200,
                 'type': 'Success',
                 'message': 'Task created successfully!',
                 'data': {
-                    'id': new_task.id,
-                    'title': new_task.title,
-                    'priority': new_task.priority,
-                    'status': new_task.status,
-                    'due_date': new_task.due_date,
+                    'id': id,
+                    'title': data.get('priority'),
+                    'priority': priority,
+                    'status': data.get('priority'),
+                    'due_date': data.get('priority'),
                 }
             }
             return response_object
@@ -206,37 +205,20 @@ class TaskService:
     @staticmethod
     def edit(data, id):
         try:
-            if data.get('priority') is None or data.get('priority') == '' or data.get('priority') == 0:
-                priority = 100
-            else:
-                priority = data.get('priority')
-            if data.get('status') is None or data.get('status') == '' or data.get('status') == 0:
-                status = 100
-            else:
-                status = data.get('status')
-            task_obj = Task.query.filter_by(id=id).first()
 
-            task_obj.title = data.get('title')
-            task_obj.description = data.get('description')
-            task_obj.priority = priority
-            task_obj.status = status
-            task_obj.due_date = data.get('due_date')
-            task_obj.resolved_at = data.get('resolved_at')
-            task_obj.remind_me_at = data.get('remind_me_at')
-            task_obj.updated_at = datetime.datetime.now().strftime("%Y-%m-%d")
-            task_obj.save()
+            # ********************************************
+            # Celery call for create task
+            # ********************************************
+
+            taskUpdate.delay(data, id)
+            # ********************************************
+            # Celery call for create task
+            # ********************************************
 
             response_object = {
                 'code': 200,
                 'type': 'Success',
                 'message': 'Task updated successfully!',
-                'data': {
-                    'id': task_obj.id,
-                    'title': task_obj.title,
-                    'priority': task_obj.priority,
-                    'status': task_obj.status,
-                    'due_date': task_obj.due_date,
-                }
             }
             return response_object
 
