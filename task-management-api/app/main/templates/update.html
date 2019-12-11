@@ -47,6 +47,7 @@ $(document).ready(function () {
             </select><br/>
             <input type="text" name="due_date" id="due_date" placeholder="Due date(YYY-MM-DD)"><br/>
             <input type="text" name="resolved_at" id="resolved_at" placeholder="Resolved date(YYY-MM-DD)"><br/>
+            <input type="text" name="remind_me_at" id="remind_me_at" placeholder="Remind me date(YYY-MM-DD)"><br/>
             <input type="submit" id="save" value="Save">
         </form>
     </div>
@@ -160,6 +161,7 @@ th {
                     $("#description").val(data.data.description)
                     $("#due_date").val(data.data.due_date)
                     $("#resolved_at").val(data.data.resolved_at)
+                    $("#remind_me_at").val(data.data.remind_me_at)
                     // $("#priority").text(data.data.priority)
                     $("#status option:contains(" + data.data.status + ")").attr('selected', 'selected')
                     $("#priority option:contains(" + data.data.priority + ")").attr('selected', 'selected')
@@ -190,6 +192,7 @@ th {
                           "priority": parseInt($('#priority').val()),
                           "due_date": $('#due_date').val(),
                           "resolved_at": $('#resolved_at').val(),
+                          "remind_me_at": $('#remind_me_at').val(),
                           "status": parseInt($('#status').val())
                         };
              console.log("data before : ", data);

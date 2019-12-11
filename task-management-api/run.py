@@ -169,5 +169,5 @@ def routes():
         print(route)
 
 if __name__ == '__main__':
-    # manager.run()
-    socketio.run(app, debug=True)
+    manager.run()
+    # socketio.run(app, debug=True)

@@ -96,16 +96,18 @@ class TaskViewController(Resource):
             return responseData(validation)
 
         return responseData(TaskService.edit(patch_data, id))
-#
-# @api.route('/<id>')
-# @api.header('Authorization: bearer', 'JWT TOKEN', required=True)
-# @api.doc(parser=parser)
-# class TaskReminderController(Resource):
-#     @cross_origin(headers=['Content-Type', 'Authorization'])
-#     def get(self, id):
-#         """
-#          API to get the user
-#          ## Implementation Notes
-#          __Access__ : Admin
-#         """
-#         return responseData(TaskService.reminder(id))
+
+
+@api.route('/process/<id>')
+@api.header('Authorization: bearer', 'JWT TOKEN', required=True)
+@api.doc(parser=parser)
+class TaskProcessController(Resource):
+    @cross_origin(headers=['Content-Type', 'Authorization'])
+    @token_required
+    def get(self, id):
+        """
+         API to get the task
+         ## Implementation Notes
+         __Access__ : Admin
+        """
+        return responseData(TaskService.process(id))

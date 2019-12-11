@@ -22,6 +22,8 @@ class Config:
     DB_PASSWORD = os.getenv('DB_PASSWORD')
     SQLALCHEMY_DATABASE_URI = 'mysql://{}:{}@{}/{}'.format(DB_USER, DB_PASSWORD, DB_HOST, DB_NAME)
     DATA_PERPAGE = 10
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND')
 
     """
     Security secret key
@@ -32,6 +34,21 @@ class Config:
     Auth0 connection variable
     """
     DOMAIN = os.getenv('DOMAIN')
+
+    """
+    Mail config
+    """
+    # MAIL_SERVER = 'smtp.gmail.com'
+    # MAIL_PORT = 25
+    # MAIL_USE_TLS = 587
+    # MAIL_USE_SSL = 852
+    # # MAIL_DEBUG = app.debug
+    # MAIL_USERNAME = 'bhartisanjay646@gmail.com'
+    # MAIL_PASSWORD = 'Sanjay@123'
+    # MAIL_DEFAULT_SENDER = 'bhartisanjay646@gmail.com'
+    # MAIL_MAX_EMAILS = None
+    # # MAIL_SUPPRESS_SEND = app.testing
+    # MAIL_ASCII_ATTACHMENTS = False
 
 
 class DevelopmentConfig(Config):

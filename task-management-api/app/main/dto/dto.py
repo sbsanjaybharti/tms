@@ -33,7 +33,8 @@ class TaskDto:
         'priority': fields.Integer(required=False, description='(Optional) by default it will be low'),
         'status': fields.Integer(required=False, description='Optional'),
         'due_date': fields.Date(required=True, description='Due date is required'),
-        'resolved_at': fields.Date(required=False, description='Resolved date is required'),
+        'resolved_at': fields.Date(required=False, description='Resolved date is optional'),
+        'remind_me_at': fields.Date(required=False, description='Remind me date is optional'),
     })
     task_list = api.model('task_list', {
         'title': fields.String(required=True, description='Title is required'),

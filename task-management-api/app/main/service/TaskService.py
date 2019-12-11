@@ -7,6 +7,8 @@ from ..model.task import Task
 from ..utility.ErrorHandler import getException
 from sqlalchemy import asc, desc, and_
 from flask import Flask, request, jsonify, current_app
+from ..utility.celery import processTheTask
+
 import datetime
 
 
@@ -55,6 +57,7 @@ class TaskService:
 
     def list(args):
         try:
+
             if 'page' in args and args['page'] is not None:
                 page = args['page']
             else:
@@ -71,6 +74,7 @@ class TaskService:
                         'title': task.title,
                         'priority': task.getPriority(),
                         'due_date': task.getDueDate(),
+                        'remind_me_at': task.getRemindMeAt(),
                         'status': task.getStatus()
                     } for task in task_list.items]
 
@@ -142,11 +146,53 @@ class TaskService:
                         'status': task_obj.getStatus(),
                         'due_date': task_obj.getDueDate(),
                         'resolved_at': task_obj.getResolvedAt(),
+                        'remind_me_at': task_obj.getRemindMeAt(),
                         'created_at': task_obj.getCreatedAt(),
                         'updated_at': task_obj.getUpdatedAt()
                     }
                 }
                 return response_object
+
+        except Exception as e:
+            response_object = {
+                    'code': 500,
+                    'type': 'Internal Server Error',
+                    'message': 'Exception occur in task service, Try again later!',
+                    'exception': getException()
+            }
+            return response_object
+
+    @staticmethod
+    def process(id):
+
+        if not id:
+            response_object = {
+                'code': 404,
+                'type': 'Not Found',
+                'message': 'Page does not exist!'
+            }
+            return response_object
+        try:
+            # ********************************************
+            # Celery call for process the task
+            # ********************************************
+
+            task_obj = Task.query.filter_by(id=id).first()
+            if task_obj.getRemindMeAt() is None:
+                processTheTask.delay(id)
+            else:
+                processTheTask.s(id).apply_async(eta=task_obj.remind_me_at)
+            # ********************************************
+            # Celery call for process the task
+            # ********************************************
+
+            response_object = {
+                'code': 200,
+                'type': 'Success',
+                'message': task_obj.getRemindMeAt(),
+            }
+            return response_object
+
 
         except Exception as e:
             response_object = {
@@ -176,6 +222,7 @@ class TaskService:
             task_obj.status = status
             task_obj.due_date = data.get('due_date')
             task_obj.resolved_at = data.get('resolved_at')
+            task_obj.remind_me_at = data.get('remind_me_at')
             task_obj.updated_at = datetime.datetime.now().strftime("%Y-%m-%d")
             task_obj.save()
 

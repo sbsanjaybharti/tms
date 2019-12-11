@@ -27,6 +27,7 @@ $(document).ready(function () {
     </ul>
     <h1>List Task</h1>
 
+        <div id="result"></div>
         <div id="display_connecting" style="height: 30px;"><i class="fa fa-spinner fa-pulse"></i>&nbsp; Connecting...</div>
 
         <div id="display_connected" style="height: 30px;"><i class="fa fa-link"></i>&nbsp; Connected</div>
@@ -139,7 +140,7 @@ $(document).ready(function () {
                   content += '<td width="15%">' + value.status + '</td>';
                   content += '<td width="15%">' + value.priority + '</td>';
                   content += '<td width="20%">' + value.due_date + '</td>';
-                  content += '<td width="30%"><a href="update/' + value.id + '">Update</a>&nbsp;<a href="update/' + value.id + '">Remind me</a></td>';
+                  content += '<td width="30%"><a href="update/' + value.id + '">Update</a>&nbsp;<a class="process" data-value="' + value.id + '" href="#">Process</a></td>';
                   content += '</tr>';
                   $(content).appendTo("#display_task");
                   content = '';
@@ -213,7 +214,7 @@ $(document).ready(function () {
                     content += '<td width="20%">' + value.data.status + '</td>';
                     content += '<td width="20%">' + value.data.priority + '</td>';
                     content += '<td width="20%">' + value.data.due_date + '</td>';
-                    content += '<td width="20%"><a href="update/' + value.data.id + '">Update</a><a href="update/' + value.data.id + '">Remind me</a></td>';
+                    content += '<td width="20%"><a href="update/' + value.data.id + '">Update</a>&nbsp;<a class="process" data-value="' + value.data.id + '" href="#">Process</a></td>';
                     content += '</tr>';
                     $("#display_task").prepend(content);
                 }
@@ -248,6 +249,45 @@ $(document).ready(function () {
             $("#task").show();
             $("#connecting").hide();
         });
+
+        $(document).on('click','.process', function () {
+                alert($(this).data("value"))
+
+            $.ajax({
+                type: "GET",
+                dataType: 'json',
+                url: "/v1/task/process/" + $(this).data("value"),
+                processData: false,
+                contentType: "application/json",
+                cache: false,
+                timeout: 600000,
+                headers: {
+                    "Authorization": sessionStorage.getItem("token")
+                },
+                success: function (data) {
+
+                    console.log("Get data : ", data);
+                    if(data.code == 200) {
+                        $("#result").text(data.message);
+                        $('#result').fadeIn('slow', function(){
+                           $('#result').delay(5000).fadeOut();
+                        });
+                        $("#result").delay(5000).fadeIn(500);
+                        return false;
+                    }else {
+                        $("#result").text('Something went wrong, Please try again');
+                    }
+
+                },
+                error: function (e) {
+
+                    $("#result").text(e.responseText);
+                    console.log("ERROR : ", e);
+                    $("#btnSubmit").prop("disabled", false);
+
+                }
+            });
+        })
 
     });
 

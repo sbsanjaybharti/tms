@@ -49,3 +49,6 @@ boto3==1.9.172
 redis==3.3.11
 gevent-websocket
 websockets
+amqp==2.5.2
+celery==4.3.0
+Flask-Mail==0.9.1

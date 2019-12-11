@@ -29,6 +29,7 @@ class Task(db.Model):
 
     due_date = db.Column(db.DateTime, nullable=True)
     resolved_at = db.Column(db.DateTime, nullable=True)
+    remind_me_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     updated_at = db.Column(db.DateTime, nullable=True)
 
@@ -57,4 +58,7 @@ class Task(db.Model):
     def getUpdatedAt(self):
         if self.updated_at != None:
             return self.updated_at.strftime('%Y-%m-%d')
+    def getRemindMeAt(self):
+        if self.remind_me_at != None:
+            return self.remind_me_at.strftime('%Y-%m-%d')
 
