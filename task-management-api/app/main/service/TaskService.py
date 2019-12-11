@@ -199,7 +199,7 @@ class TaskService:
                     'code': 500,
                     'type': 'Internal Server Error',
                     'message': 'Exception occur in task service, Try again later!',
-                    'exception': getException()
+                    'exception': 'Task added to process queue successfully '
             }
             return response_object
 

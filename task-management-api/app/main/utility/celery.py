@@ -22,12 +22,7 @@ def processTheTask(id):
    task_obj.resolved_at = datetime.datetime.now().strftime("%Y-%m-%d")
    task_obj.updated_at = datetime.datetime.now().strftime("%Y-%m-%d")
    task_obj.save()
-   response_object = {
-      'code': 200,
-      'type': 'Success',
-      'message': 'Task created successfully!',
-   }
-   return 'celerytasksanjay'
+   return 'Task move to process successfully!'
 
 
 

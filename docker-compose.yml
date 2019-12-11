@@ -13,7 +13,6 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./traefik.toml:/etc/traefik/traefik.toml
-      - ./ssl:/ssl/
 
   tmapi:
     build: ./nginx
@@ -28,21 +27,6 @@ services:
       - "traefik.backend=tmapi"
       - "traefik.frontend.rule=Host:tmapi.docker.localhost"
       - "traefik.port=9000"
-      - "traefik.enable=true"
-
-  frontend:
-    build: ./nginx
-    environment:
-      APP_HOST_NAME: 'frontend-management'
-      APP_HOST_PORT: 8001
-    container_name: frontend_nginx
-    restart: always
-    depends_on:
-      - frontend-management
-    labels:
-      - "traefik.backend=frontend"
-      - "traefik.frontend.rule=Host:frontend.docker.localhost"
-      - "traefik.port=9001"
       - "traefik.enable=true"
 
   # ##################
@@ -62,40 +46,18 @@ services:
       DB_PASSWORD: example
       DOMAIN: 'tmapi.docker.localhost'
       DEBUG_MODE: 'True'
+      CELERY_BROKER_URL: 'amqp://rabbitmq:rabbitmq@rabbit1:5672/'
+      CELERY_RESULT_BACKEND: 'rpc://'
     volumes:
       - ./task-management-api:/app
     expose:
       - 8001
     depends_on:
       - mysql
+      - rabbit1
     labels:
       - "traefik.backend=task-management-api"
       - "traefik.frontend.rule=Host:task-management-api.docker.localhost"
-      - "traefik.port=8001"
-      - "traefik.enable=true"
-
-  # ##################
-  # Frontend Application
-  # ##################
-  frontend-management:
-    build:
-      context: ./frontend-management
-      dockerfile: local.Dockerfile
-    environment:
-      APP_NAME: 'PaymentsAPI'
-      FLASK_CONFIG: 'development'
-      ALLOWD_HOST: 'frontend-management.localhost'
-      DOMAIN: frontend.docker.localhost
-      DEBUG_MODE: 'True'
-    volumes:
-      - ./frontend-management:/app
-    expose:
-      - 8001
-    depends_on:
-      - mysql
-    labels:
-      - "traefik.backend=frontend-management"
-      - "traefik.frontend.rule=Host:frontend-management.docker.localhost"
       - "traefik.port=8001"
       - "traefik.enable=true"
 
@@ -143,8 +105,43 @@ services:
       - ./mysql_dumps:/backup
     depends_on:
       - mysql
+
+  # ##################
+  # Rabbit MQ server
+  # ##################
+  rabbit1:
+    image: "rabbitmq:3-management"
+    hostname: "rabbit1"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
+#    ports:
+#      - "15672:15672"
+#      - "5672:5672"
+    labels:
+      - "traefik.backend=rabbit"
+      - "traefik.frontend.rule=Host:rabbit.docker.localhost"
+      - "traefik.port=15672"
+      - "traefik.enable=true"
+    volumes:
+      - "./rabbit/enabled_plugins:/etc/rabbitmq/enabled_plugins"
+      #- "./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro"
+      #- "./autocluster-0.4.1.ez:/usr/lib/rabbitmq/lib/rabbitmq_server-3.5.5/plugins/autocluster-0.4.1.ez"
+
+  # ##################
+  # Redis server
+  # ##################
   redis:
+    container_name: redis
     image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ../data/redis:/data
+    entrypoint: redis-server --appendonly yes
+    restart: always
     labels:
       - "traefik.backend=redis"
       - "traefik.frontend.rule=Host:redis.docker.localhost"
