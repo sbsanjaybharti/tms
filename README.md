@@ -26,6 +26,7 @@
  also you can follow by drag and drop to draw.io
  or else click on the link:
  https://www.draw.io/#Hsbsanjaybharti%2Ftms%2Fmaster%2Ftask_management_system.xml
+ Recently add pdf architecture https://github.com/sbsanjaybharti/tms/blob/master/architecture.pdf 
  
  ### URL:
  Application consist of dynamic IP;
