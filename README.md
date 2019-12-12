@@ -6,6 +6,7 @@
 * Rabbit MQ
 * Socket.IO
 * Celery
+* Swagger
 
 1. git clone https://github.com/sbsanjaybharti/tms.git
 2. cd tms
@@ -26,4 +27,14 @@
  or else click on the link:
  https://www.draw.io/#Hsbsanjaybharti%2Ftms%2Fmaster%2Ftask_management_system.xml
  
+ ### URL:
+ Application consist of dynamic IP;
+ So, localhost:8080 for traefik. Here you can see the list of running service URL(Frontends) and IP(Backends).
+  URL will work only with SSL configuration. So follow the IP.
+ 1. traefik: localhost:8080 
+ 2. Mysql admin: backend-phpmyadmin IP (username: root, password: example)
+ 3.Rabbit: backend-rabbit IP (username: rabbitmq, password: rabbitmq)
+ 4. Rabbit: backend-rabbit IP (username: rabbitmq, password: rabbitmq)
+ 5. Application frontend: backend-tmapi IP with broadcast/ For example: http://192.168.48.9:9000/broadcast
+ 6. Application Backend API: backend-tmapi IP with broadcast/ For example: http://192.168.48.9:9000
  
