@@ -11,7 +11,7 @@
  4. python run.py db upgrade
  5. celery -A app.main.utility.celery.celey worker --loglevel=info
  
- ###Now aplication is ready
+ ### Now aplication is ready
  You can follow the video omini-1.mp4 present in repository.
  Also you can find archtecture task_management_system.xml in same repository
  also you can follow by drag and drop to draw.io
