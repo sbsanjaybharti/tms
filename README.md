@@ -1,4 +1,12 @@
 # Task Management System
+
+### Requirement:
+* Flask
+* MySQL
+* Rabbit MQ
+* Socket.IO
+* Celery
+
 1. git clone https://github.com/sbsanjaybharti/tms.git
 2. cd tms
 3. docker-compose build
