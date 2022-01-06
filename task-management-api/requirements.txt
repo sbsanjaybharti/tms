@@ -44,11 +44,11 @@ requests==2.22.0
 authlib==0.11
 python-jose==3.0.1
 python-jose-cryptodome==1.3.2
-celery==4.3.0
+celery==5.2.2
 boto3==1.9.172
 redis==3.3.11
 gevent-websocket
 websockets
 amqp==2.5.2
-celery==4.3.0
+celery==5.2.2
 Flask-Mail==0.9.1
